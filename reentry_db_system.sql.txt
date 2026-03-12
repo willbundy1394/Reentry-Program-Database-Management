@@ -1,0 +1,91 @@
+-- REENTRY PROGRAM DATABASE SYSTEM
+-- Designed and Implemented by Will Bundy
+
+-- 1. CLEANUP (Optional: Drops tables if they exist to allow for clean re-runs)
+DROP TABLE IF EXISTS CLIENT_COURSE;
+DROP TABLE IF EXISTS APPLICATION;
+DROP TABLE IF EXISTS CLIENT_SERVICE;
+DROP TABLE IF EXISTS CRIMINAL_RECORD;
+DROP TABLE IF EXISTS JOB_OPENING;
+DROP TABLE IF EXISTS SERVICE;
+DROP TABLE IF EXISTS COURSE;
+DROP TABLE IF EXISTS EMPLOYER;
+DROP TABLE IF EXISTS CLIENT;
+
+-- 2. CREATE TABLES (Ordered by dependency)
+CREATE TABLE CLIENT (
+   Client_ID     INT           PRIMARY KEY,
+   L_Name        NVARCHAR(35),
+   F_Name        NVARCHAR(35),
+   Gender        CHAR(1)        CHECK(Gender IN ('M','F','O')),
+   DOB           DATE,
+   Date_joined   DATE,
+   Mentor_ID_FK  INT            NULL,
+   CONSTRAINT FK_CLIENT_MENTOR FOREIGN KEY (Mentor_ID_FK) REFERENCES CLIENT(Client_ID)
+);
+
+CREATE TABLE CRIMINAL_RECORD (
+   Crime_ID            INT            PRIMARY KEY,
+   Type_of_crime       NVARCHAR(35),
+   Date_commited       DATE,
+   Date_sentenced      DATE,
+   Length_of_sentence  DECIMAL(5,2),
+   Client_ID_FK        INT,
+   CONSTRAINT FK_CRIMINAL_CLIENT FOREIGN KEY (Client_ID_FK) REFERENCES CLIENT(Client_ID)
+);
+
+CREATE TABLE EMPLOYER (
+   Employer_ID   INT           PRIMARY KEY,
+   Company_name  NVARCHAR(35),
+   Contact_person NVARCHAR(35),
+   Phone_number  NVARCHAR(15)
+);
+
+CREATE TABLE JOB_OPENING (
+   Opening_ID     INT           PRIMARY KEY,
+   Title          NVARCHAR(35),
+   Pay_rate       DECIMAL(5,2),
+   Employer_ID_FK INT,
+   CONSTRAINT FK_JOB_EMPLOYER FOREIGN KEY (Employer_ID_FK) REFERENCES EMPLOYER(Employer_ID)
+);
+
+CREATE TABLE SERVICE (
+   Service_ID    INT           PRIMARY KEY,
+   Service_name  NVARCHAR(35),
+   Provider      NVARCHAR(35)
+);
+
+CREATE TABLE CLIENT_SERVICE (
+   Client_ID_FK  INT,
+   Service_ID_FK INT,
+   Date_started  DATE,
+   CONSTRAINT PK_CLIENT_SERVICE PRIMARY KEY (Client_ID_FK, Service_ID_FK),
+   CONSTRAINT FK_CS_CLIENT FOREIGN KEY (Client_ID_FK) REFERENCES CLIENT(Client_ID),
+   CONSTRAINT FK_CS_SERVICE FOREIGN KEY (Service_ID_FK) REFERENCES SERVICE(Service_ID)
+);
+
+CREATE TABLE APPLICATION (
+   Client_ID_FK    INT,
+   Opening_ID_FK   INT,
+   Date_applied    DATE,
+   Successful      BIT,
+   CONSTRAINT PK_APPLICATION PRIMARY KEY (Client_ID_FK, Opening_ID_FK),
+   CONSTRAINT FK_APP_CLIENT FOREIGN KEY (Client_ID_FK) REFERENCES CLIENT(Client_ID),
+   CONSTRAINT FK_APP_JOB FOREIGN KEY (Opening_ID_FK) REFERENCES JOB_OPENING(Opening_ID)
+);
+
+-- 3. INSERT SAMPLE DATA
+INSERT INTO CLIENT (Client_ID, L_Name, F_Name, Gender, DOB, Date_joined, Mentor_ID_FK)
+VALUES 
+(1, 'Jackson', 'Mia', 'F', '1990-04-12', '2025-01-10', NULL),
+(2, 'Reed', 'Noah', 'M', '1988-09-03', '2025-02-01', 3),
+(3, 'Patel', 'Ava', 'F', '1993-11-22', '2024-12-15', NULL),
+(4, 'Nguyen', 'Eli', 'M', '1995-06-30', '2025-03-05', 3);
+
+INSERT INTO EMPLOYER VALUES (10, 'TechCorp', 'John Doe', '555-0101');
+INSERT INTO JOB_OPENING VALUES (32, 'Data Entry', 18.50, 10);
+INSERT INTO APPLICATION VALUES (1, 32, '2025-02-20', 1);
+
+-- 4. VERIFY RESULTS
+SELECT * FROM CLIENT;
+SELECT * FROM APPLICATION;
